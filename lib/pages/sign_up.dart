@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secret_chat/api/auth_api.dart';
-import 'package:flutter_secret_chat/utils/responsive.dart';
 import 'package:flutter_secret_chat/widgets/circle.dart';
 import 'package:flutter_secret_chat/widgets/input.dart';
 
-class LoginPage extends StatefulWidget {
+class SingUpPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _SingUpPageState createState() => _SingUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SingUpPageState extends State<SingUpPage> {
   final _formKey = GlobalKey<FormState>();
+  var _username ='',_email='',_password='';
   final _authAPI = AuthAPI();
-  var _email = '', _password = '';
   var _isFetching = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -23,29 +23,27 @@ class _LoginPageState extends State<LoginPage> {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
   }
 
-  _submit() async {
+  _submit() async{
     if (_isFetching) return;
-    final isValid = _formKey.currentState.validate();
-    if (isValid) {
-      setState(() {
-        _isFetching = true;
-      });
-      final isOK =
-          await _authAPI.login(context, email: _email, password: _password);
-      setState(() {
-        _isFetching = false;
-      });
-      if (isOK) {
-        print('LOGIN IS OK');
-        Navigator.pushNamedAndRemoveUntil(context, 'splash', (_)=>false);
-      }
-    }
+   final isValid= _formKey.currentState.validate();
+    setState(() {
+      _isFetching = true;
+    });
+   if(isValid){
+     final isOK= await _authAPI.register(context,username:_username, email:_email, password: _password);
+     setState(() {
+       _isFetching = false;
+     });
+     if(isOK){
+       print("Register");
+       Navigator.pushNamedAndRemoveUntil(context, 'splash', (_)=>false);
+     }
+   }
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final responsive = Responsive(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: GestureDetector(
@@ -82,8 +80,8 @@ class _LoginPageState extends State<LoginPage> {
                         Column(
                           children: <Widget>[
                             Container(
-                              width: responsive.wp(20),
-                              height: responsive.hp(10),
+                              width: 90,
+                              height: 90,
                               child: Icon(
                                 Icons.threed_rotation,
                                 size: 60,
@@ -100,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(height: 30),
                             Text("Hello again.\nWelcome back",
                                 style: TextStyle(
-                                    fontSize: responsive.ip(2), fontWeight: FontWeight.w300),
+                                    fontSize: 18, fontWeight: FontWeight.w300),
                                 textAlign: TextAlign.center)
                           ],
                         ),
@@ -116,26 +114,35 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Column(
                                   children: <Widget>[
                                     InputText(
+                                      label: "Username",
+                                      validator: (String text) {
+                                        if (RegExp(r'^[a-zA-Z0-9]+$').hasMatch(text)) {
+                                          _username =text;
+                                          return null;
+                                        }
+                                        return "Invalid Username";
+                                      },
+                                    ),
+                                    SizedBox(height: 20),
+                                    InputText(
                                       label: "Email Address",
                                       inputType: TextInputType.emailAddress,
-                                      fontSize: responsive.ip(2),
                                       validator: (String text) {
                                         if (text.contains("@")) {
-                                          _email = text;
+                                          _email=text;
                                           return null;
                                         }
                                         return "Invalid Email";
                                       },
                                     ),
-                                    SizedBox(height: 30),
+                                    SizedBox(height: 20),
                                     InputText(
                                       label: "Password",
                                       isSecure: true,
-                                      fontSize: responsive.ip(2),
                                       validator: (String text) {
                                         if (text.isNotEmpty &&
                                             text.length > 5) {
-                                          _password = text;
+                                          _password=text;
                                           return null;
                                         }
                                         return "Invalid Password";
@@ -152,10 +159,10 @@ class _LoginPageState extends State<LoginPage> {
                                 minWidth: 350,
                               ),
                               child: CupertinoButton(
-                                  padding: EdgeInsets.symmetric(vertical: responsive.ip(2)),
+                                  padding: EdgeInsets.symmetric(vertical: 17),
                                   color: Colors.pinkAccent,
                                   borderRadius: BorderRadius.circular(4),
-                                  child: Text("Sing in",
+                                  child: Text("Sing up",
                                       style: TextStyle(fontSize: 20)),
                                   onPressed: () => _submit()),
                             ),
@@ -163,16 +170,15 @@ class _LoginPageState extends State<LoginPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
-                                Text("New to Friendly?",
+                                Text("Already have an account?",
                                     style: TextStyle(
-                                        fontSize: responsive.ip(1.8), color: Colors.black54)),
+                                        fontSize: 16, color: Colors.black54)),
                                 CupertinoButton(
-                                    child: Text("Sing up",
+                                    child: Text("Sing in",
                                         style: TextStyle(
-                                            fontSize: responsive.ip(1.8),
+                                            fontSize: 16,
                                             color: Colors.pinkAccent)),
-                                    onPressed: () =>
-                                        Navigator.pushNamed(context, "singup")),
+                                    onPressed: () =>Navigator.pop(context)),
                               ],
                             ),
                             SizedBox(height: size.height * 0.08)
@@ -183,7 +189,22 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-             _isFetching? Positioned.fill(child: Container(
+              Positioned(
+                  left: 15,
+                  top: 5,
+                  child: SafeArea(
+                    child: CupertinoButton(
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                        ),
+                        color: Colors.black12,
+                        padding: EdgeInsets.all(10),
+                        borderRadius: BorderRadius.circular(30),
+                        onPressed: () => Navigator.pop(context)),
+                  )),
+              //start feching dialog
+              _isFetching? Positioned.fill(child: Container(
                 color: Colors.black45,
                 child: Center(
                   child: CupertinoActivityIndicator(radius: 15),
